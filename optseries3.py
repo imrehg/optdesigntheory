@@ -55,8 +55,8 @@ dla = lambda p, x: zeros(shape(p[2]))+1/((x-p[0])**2+p[1]**2)
 
 def getf(p, x):
     # return array([[dlx0(p, x)],[dlg(p,x)],[dla(p,x)]])
-    # return array([[dlg(p, x)],[dlx0(p,x)],[dla(p,x)]])
-    return array([[dla(p, x)],[dlx0(p,x)],[dlg(p,x)]])
+    return array([[dlg(p, x)],[dlx0(p,x)],[dla(p,x)]])
+    # return array([[dla(p, x)],[dlx0(p,x)],[dlg(p,x)]])
 
 # Distribution parameters
 p = [0, 1, 1]
@@ -111,9 +111,9 @@ print "%.1f %.1f %.1f %.1f" %(retres[0], retres[1], retres[2], retres[2]-retres[
 
 
 ### Grid with (ng, ng) points for search
-ng = 15
+ng = 5
 al = linspace(0, 1.5, ng)
-bl = linspace(0.05, 1, ng)
+bl = linspace(0.02, 1, ng)
 X, Y = meshgrid(al, bl)
 x = linspace(xlim[0], xlim[1], 301)
 Zmean = zeros((ng, ng))
@@ -128,22 +128,23 @@ for i in xrange(ng):
         b = Y[i,j]
         # pars0 = [[-a, b, 1], [a, b, 1]]
         pars0 = [[-a, b, 1], [0, b, 1], [a, b, 1]]
-        F = zeros((3,3))
+        M = zeros((3,3))
         for fi in xrange(3):
             for fj in xrange(3):
-                F[fi, fj] = quad(infointeg, xlim[0], xlim[1], args=(p, pars0, [fi, fj]))[0] / \
+                M[fi, fj] = quad(infointeg, xlim[0], xlim[1], args=(p, pars0, [fi, fj]))[0] / \
                     quad(compoundexp, xlim[0], xlim[1], args=(pars0))[0]
 
-        Minv = inv(dot(F.T,F))
+        Minv = inv(M)
         ret = array([])
         for pos in x:
             ret = append(ret, dot(getf(p, pos).T, dot(Minv, getf(p, pos))))
 
-        Minv2 = inv(dot(F[1:,1:].T,F[1:,1:]))
+        Minv2 = inv(M[1:,1:])
         for pi, pos in enumerate(x):
             ret[pi] -= dot(getf(p, pos)[1:].T, dot(Minv2, getf(p, pos)[1:]))
         
-        Zinfo[i, j] = det(dot(F.T,F)) / det(dot(F[1:,1:].T,F[1:,1:]))
+        Zinfo[i, j] = det(M) / det(M[1:,1:])
+        # Zinfo[i, j] = det(M)
         Zmean[i, j] = log(mean(ret))
         Zmin[i, j] = log(min(ret))
         Zmax[i, j] = log(max(ret))

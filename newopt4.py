@@ -11,8 +11,8 @@ dg = lambda p, x: -2*p[1]*p[2]/((x-p[0])**2 + p[1]**2)**2
 da = lambda p, x: 1/((x-p[0])**2 + p[1]**2)
 
 def getf(p, x):
-    # return array([[dx0(p, x)], [dg(p, x)], [da(p, x)]])
-    return array([[dx0(p, x)], [dg(p, x)], [da(p, x)], [2*dx0(p, x)*dg(p, x)], [2*dx0(p, x)*da(p, x)], [2*dg(p, x)*da(p, x)]])
+    return array([[dx0(p, x)], [dg(p, x)], [da(p, x)]])
+    # return array([[dx0(p, x)], [dg(p, x)], [da(p, x)], [2*dx0(p, x)*dg(p, x)], [2*dx0(p, x)*da(p, x)], [2*dg(p, x)*da(p, x)]])
     # return array([[dg(p, x)], [dx0(p, x)], [da(p, x)]])
     # return array([[da(p, x)], [dx0(p, x)], [dg(p, x)]])
 
@@ -25,7 +25,7 @@ def getnewx(x):
     F = zeros((n, 6))
     for i, xi in enumerate(x):
         F[i] = getf(p, xi).T[0]
-    M = dot(F.T, F)/n
+    M = dot(F.T, F)
     dfunc = lambda x: dot(getf(p, x).T, dot(inv(M), getf(p, x)))
     #dfunc = lambda x: dot(getf(p, x).T, dot(inv(M), getf(p, x))) - dot(getf(p, x)[1:].T, dot(inv(M[1:,1:]), getf(p, x)[1:]))
     x2 = linspace(-3, 3, 301)

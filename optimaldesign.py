@@ -55,6 +55,27 @@ def Mexact(f, p, xi):
     M /= len(xi)
     return M
 
+def Mcontsub(f, p, xi, xlim, xiparms):
+    """
+    Suboptimal continuous M
+
+    Input:
+    f(p, x) : information matrix row
+    p : input parameters
+    xi(x, xparms) : probability distribution for xi
+    xlim : integration limits
+    xiparms : parameters for the probability distribution
+    """
+    norm = quad(xi, xlim[0], xlim[1], args=(xiparms))[0]
+    n = len(f(p, xlim[0]))
+    M = zeros((n,n))
+    for fi in xrange(n):
+        for fj in xrange(n):
+            infointeg = lambda x, p, xiparms, i, j: f(p, x)[i]*f(p, x)[j]*xi(x, xiparms)
+            M[fi, fj] = quad(infointeg, xlim[0], xlim[1], 
+                             args=(p, xiparms, fi, fj))[0] / norm
+    return M
+
 def sdvarcont(f, p, xi, x):
     """
     Standardized variance for continuous design
@@ -65,27 +86,32 @@ def sdvarcont(f, p, xi, x):
         ret = append(ret, dot(f(p, pos).T, dot(Minv, f(p, pos))))
     return ret
 
-def sdvarexact(f, p, xi, x):
+def sdvarexact(f, p, xi, x, optimize=False):
     """
     Standardized variance for exact design
     """
-    Minv = inv(Mexact(f, p, xi))
+    # guarding agains singular matrices
+    n = len(f(p, xi[0]))
+    e = 1e-6
+    M = Mexact(f, p, xi)-diag([e]*n)
+    Minv = inv(M)
+    if optimize:
+        Minv2 = inv(M[1:,1:])
     ret = array([])
     for pos in x:
         ret = append(ret, dot(f(p, pos).T, dot(Minv, f(p, pos))))
+        if optimize:
+            ret[-1] -= dot(f(p, pos)[1:].T, dot(Minv2, f(p, pos)[1:]))
     return ret
 
-def sequential(f, p, xstart, xlim, nmax):
+def sequential(f, p, xstart, xlim, nmax, optimize=False):
     """
     Sequential generation N-point design
     """
     x = xstart
     xl = linspace(xlim[0], xlim[1], 1001)
     for i in xrange(len(x)+1, nmax):
-        dxk = sdvarexact(f, p, x, xl)
+        dxk = sdvarexact(f, p, x, xl, optimize)
         m = argmax(dxk)
         x = append(x, xl[m])
     return x
-
-
-        
