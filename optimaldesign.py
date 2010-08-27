@@ -76,14 +76,21 @@ def Mcontsub(f, p, xi, xlim, xiparms):
                              args=(p, xiparms, fi, fj))[0] / norm
     return M
 
-def sdvarcont(f, p, xi, x):
+def sdvarcont(f, p, xi, x, optimize=False):
     """
     Standardized variance for continuous design
     """
-    Minv = inv(Mcontinuous(f, p, xi))
+    n = len(f(p, xi[0]))
+    e = 1e-5
+    M = Mcontinuous(f, p, xi)-diag([e]*n)
+    Minv = inv(M)
     ret = array([])
+    if optimize:
+        Minv2 = inv(M[1:,1:])
     for pos in x:
         ret = append(ret, dot(f(p, pos).T, dot(Minv, f(p, pos))))
+        if optimize:
+            ret[-1] -= dot(f(p, pos)[1:].T, dot(Minv2, f(p, pos)[1:]))
     return ret
 
 def sdvarexact(f, p, xi, x, optimize=False):
@@ -92,7 +99,7 @@ def sdvarexact(f, p, xi, x, optimize=False):
     """
     # guarding agains singular matrices
     n = len(f(p, xi[0]))
-    e = 1e-6
+    e = 1e-7
     M = Mexact(f, p, xi)-diag([e]*n)
     Minv = inv(M)
     if optimize:
@@ -109,9 +116,10 @@ def sequential(f, p, xstart, xlim, nmax, optimize=False):
     Sequential generation N-point design
     """
     x = xstart
-    xl = linspace(xlim[0], xlim[1], 1001)
+    xl = linspace(xlim[0], xlim[1], 2001)
     for i in xrange(len(x)+1, nmax):
         dxk = sdvarexact(f, p, x, xl, optimize)
-        m = argmax(dxk)
+        m = argmax(abs(dxk))
+        # print dxk[m]
         x = append(x, xl[m])
     return x
