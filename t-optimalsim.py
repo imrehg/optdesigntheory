@@ -191,10 +191,15 @@ p1e = dot(inv(dot(F1.T, F1)),dot(F1.T, y1))
 p2e = dot(inv(dot(F2.T, F2)),dot(F2.T, y1))
 RSS1 = sum((y1 - n1(p1e, x))**2)
 RSS2 = sum((y1 - n2(p2e, x))**2)
+RSSx = sum((y1 - n1(p1, x))**2)
+pl.figure(15)
+pl.plot(x, y1-n1(p1, x), 'x')
+pl.plot(x, y1-n1(p1e, x), 'o')
 # print "Model1 RSS: ", RSS1
 # print "Model2 RSS: ", RSS2
-print "Model1 RSS: ", RSS1/(s**2)
-print "Model2 RSS: ", RSS2/(s**2)
+print "Model1 RSS: ", RSS1, RSS1/s**2
+print "Model2 RSS: ", RSS2, RSS2/s**2
+print "MinRSS: ", s**2*maxiter
 from scipy.stats import chi2
 print "P1:", 1-chi2.cdf(RSS1/(s**2), maxiter-3-1)
 print "P2:", 1-chi2.cdf(RSS2/(s**2), maxiter-3-1)
